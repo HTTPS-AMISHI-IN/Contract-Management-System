@@ -5,7 +5,6 @@ import base64
 import os
 import pytz
 import ast
-import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, date, timedelta
 from typing import Union, Tuple
