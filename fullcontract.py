@@ -9,7 +9,6 @@ from datetime import datetime, date, timedelta
 from typing import Union, Tuple
 import dateutil.parser as du_parser
 from dateutil.relativedelta import relativedelta
-from plotly.subplots import make_subplots
 from decimal import Decimal, getcontext
 from math import ceil
 
