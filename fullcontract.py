@@ -11,6 +11,8 @@ import dateutil.parser as du_parser
 from dateutil.relativedelta import relativedelta
 from decimal import Decimal, getcontext
 from math import ceil
+import magic
+from pathlib import Path
 
 
 # Page configuration
@@ -20,6 +22,66 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
+
+def secure_file_validator(uploaded_file):
+    """Single best method for file validation"""
+    if not uploaded_file:
+        return False, "No file provided"
+    
+    # 1. Size limit check (first - most efficient)
+    MAX_SIZE = 50 * 1024 * 1024  # 50MB
+    if uploaded_file.size > MAX_SIZE:
+        return False, f"File too large. Maximum size: {MAX_SIZE/1024/1024:.0f}MB"
+    
+    # 2. Read file content
+    file_content = uploaded_file.read()
+    uploaded_file.seek(0)  # Reset file pointer
+    
+    # 3. Validate actual MIME type (prevents extension spoofing)
+    try:
+        actual_mime = magic.from_buffer(file_content, mime=True)
+    except:
+        return False, "Cannot determine file type"
+    
+    # 4. Allowed file types with MIME validation
+    ALLOWED_TYPES = {
+        'application/pdf': ['.pdf'],
+        'image/jpeg': ['.jpg', '.jpeg'],
+        'image/png': ['.png'],
+        'application/msword': ['.doc'],
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']
+    }
+    
+    if actual_mime not in ALLOWED_TYPES:
+        return False, f"File type '{actual_mime}' not allowed"
+
+    file_ext = Path(uploaded_file.name).suffix.lower()
+    if file_ext not in ALLOWED_TYPES[actual_mime]:
+        return False, f"Extension '{file_ext}' doesn't match file content"
+    
+    return True, "Valid file"
+
+def secure_file_uploader(label, key):
+    """Secure file uploader with validation"""
+    uploaded_file = st.file_uploader(
+        label, 
+        type=['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'],
+        key=key,
+        help="📁 Supported: PDF, Images, Word docs | 📊 Max: 50MB per file"
+    )
+    
+    if uploaded_file:
+        is_valid, message = secure_file_validator(uploaded_file)
+        
+        if is_valid:
+            st.success(f"✅ **{uploaded_file.name}** - Validated ({uploaded_file.size/1024:.1f} KB)")
+            return uploaded_file
+        else:
+            st.error(f"❌ **{uploaded_file.name}** - {message}")
+            return None
+    
+    return None
 
 # Conversion of image to base64
 def get_base64_of_bin_file(bin_file):
@@ -597,30 +659,6 @@ st.markdown("""
         border-radius: 6px;
         border-left: 4px solid #ef4444;
     }
-    
-    @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
-    /* Expander arrows */
-    .stExpander > details > summary::marker {
-            content: "▶ " !important;
-            font-size: 14px;
-    }
-    .stExpander > details[open] > summary::marker {
-            content: "▼ " !important;
-            font-size: 14px;
-    }
-    .stExpander summary span[data-testid="stMarkdownContainer"] {
-            display: flex;
-            align-items: center;
-    }
-    .stExpander summary::before {
-            content: "▶" !important;
-            margin-right: 8px;
-            font-size: 12px;
-            color: #666;
-    }
-    .stExpander[data-expanded="true"] summary::before {
-            content: "▼" !important;
-    }
             
     /* Section headers */
     h1, h2, h3 {
@@ -1112,7 +1150,7 @@ with tabs[0]:
 with tabs[1]:
     st.markdown("#### Create New Work Order")
 
-    wo_uploaded_proof = st.file_uploader(
+    wo_uploaded_proof = secure_file_uploader(
         "Upload **Proof** of Contract",
         type=['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'],
         key="wo_uploaded_proof"
@@ -1779,7 +1817,7 @@ with tabs[2]:
     if not st.session_state.get('work_orders'):
         st.warning("⚠️ **No Work Orders Available.** Please create a work order first. Invoices can only be created for items that exist in work orders.")
 
-    invoice_uploaded_proof = st.file_uploader(
+    invoice_uploaded_proof = secure_file_uploader(
         "Upload **Proof** of Invoice",
         type=['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'],
         key="invoice_uploaded_proof"
@@ -5424,7 +5462,7 @@ with tabs[6]:
             )
         
         # Advanced Filters in Expander
-        with st.expander("🔧 Advanced Filters"):
+        with st.expander(f"🔧 Advanced Filters", expanded=False):
             filter_col1, filter_col2, filter_col3 = st.columns(3)
             
             with filter_col1:
@@ -5789,52 +5827,89 @@ with tabs[7]:  # About tab
     
     
     st.markdown("---")
-    
     # FAQ Section
     st.markdown("#### **Frequently Asked Questions (FAQs)**")
     
-    with st.expander("📋 How do I create a new work order?", expanded=False):
-        st.markdown("""
-        1. Navigate to the **Work Order** tab
-        2. Fill in all required contract details (Contract Number, Vendor, Location, etc.)
-        3. Add items with their categories and values
-        4. Upload proof documents
-        5. Click **Create Work Order** to save
-        """)
+    faq_items = [
+        {
+            "question": "How do I create a new work order?",
+            "answer": """
+            **Step-by-step guide:**
+            1. Navigate to the **New Work Order** tab
+            2. Fill in all required contract details
+            3. Add items with categories and values
+            4. Upload proof documents
+            5. Click **Create Work Order** to save
+            """
+        },
+        {
+            "question": "How are invoice milestones calculated?",
+            "answer": """
+            **Milestone calculation based on:**
+            - Category type (Hardware, AMC, Software, etc.)
+            - Payment percentages set during creation
+            - Duration and period specifications
+            - GST calculations applied automatically
+            """
+        },
+        {
+            "question": "Why am I getting duplicate detection warnings?",
+            "answer": """
+            **System prevents duplicates by checking:**
+            - Contract Number + Sub-Contract Number combination
+            - Work Order Number + Item Name + Category combination
+            
+            **Solution:** Use different values or check existing entries.
+            """
+        },
+        {
+            "question": "How do I export reports?",
+            "answer": """
+            Reports can be exported from:
+            - **Dashboard tab** - Overall analytics and summaries
+            - **Work Order tab** - Detailed contract information
+            - **Invoice tab** - Payment and milestone reports
+            - Data is available in **Excel and CSV formats**
+            """
+        },
+        {
+            "question": "What do the status indicators mean?",
+            "answer": """
+            - **🟢 Green**: Available/Valid entries
+            - **🔴 Red**: Duplicates or validation errors
+            - **🟡 Yellow**: Warnings or attention required
+            - **✅ Success**: Operations completed successfully
+            """
+        }
+    ]
     
-    with st.expander("💰 How are invoice milestones calculated?", expanded=False):
-        st.markdown("""
-        Invoice milestones are automatically calculated based on:
-        - **Category type** (Hardware, AMC, Software, etc.)
-        - **Payment percentages** set during invoice creation
-        - **Duration and period** specifications
-        - **GST calculations** applied automatically
-        """)
-    
-    with st.expander("🔍 Why am I getting duplicate detection warnings?", expanded=False):
-        st.markdown("""
-        The system prevents duplicates by checking:
-        - **Contract Number + Sub-Contract Number combination**
-        - **Work Order Number + Item Name + Category**
-        - Use different values or check existing entries in the dashboard
-        """)
-    
-    with st.expander("📊 How do I export reports?", expanded=False):
-        st.markdown("""
-        Reports can be exported from:
-        - **Dashboard tab** - Overall analytics and summaries
-        - **Work Order tab** - Detailed contract information
-        - **Invoice tab** - Payment and milestone reports
-        - Data is available in **Excel and CSV formats**
-        """)
-    
-    with st.expander("⚠️ What do the status indicators mean?", expanded=False):
-        st.markdown("""
-        - **🟢 Green**: Available/Valid entries
-        - **🔴 Red**: Duplicates or validation errors
-        - **🟡 Yellow**: Warnings or attention required
-        - **✅ Success**: Operations completed successfully
-        """)
+    # Render each FAQ
+    for i, faq in enumerate(faq_items):
+        key = f"faq_{i}"
+        
+        if key not in st.session_state:
+            st.session_state[key] = False
+        
+        arrow = "▼" if st.session_state[key] else "▶"
+        
+        # Custom button with arrow
+        if st.button(f"{arrow} {faq['question']}", key=f"{key}_btn", use_container_width=True):
+            st.session_state[key] = not st.session_state[key]
+            st.rerun()
+        
+        # Show content if expanded
+        if st.session_state[key]:
+            st.markdown(f"""
+            <div style="
+                background: #f8fafc; 
+                padding: 1rem; 
+                border-left: 3px solid #3b82f6; 
+                margin: 0.5rem 0 1rem 0;
+                border-radius: 0 6px 6px 0;
+            ">
+                {faq['answer']}
+            </div>
+            """, unsafe_allow_html=True)
     
     st.markdown("---")
     
