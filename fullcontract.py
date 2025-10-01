@@ -1145,7 +1145,6 @@ with tabs[1]:
 
     wo_uploaded_proof = secure_file_uploader(
         "Upload **Proof** of Contract",
-        type=['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'],
         key="wo_uploaded_proof"
     )
 
@@ -1812,7 +1811,6 @@ with tabs[2]:
 
     invoice_uploaded_proof = secure_file_uploader(
         "Upload **Proof** of Invoice",
-        type=['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'],
         key="invoice_uploaded_proof"
     )
 
