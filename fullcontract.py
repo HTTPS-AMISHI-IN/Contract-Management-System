@@ -637,6 +637,21 @@ st.markdown("""
         transform: translateY(-1px);
     }
     
+    /* Specific styling for FAQ buttons if you want to target them specifically */
+    [data-testid="stButton"]:has(button:contains("▶")),
+    [data-testid="stButton"]:has(button:contains("▼")) {
+            margin-bottom: 0.5rem;
+    }
+
+    [data-testid="stButton"]:has(button:contains("▶")) button,
+    [data-testid="stButton"]:has(button:contains("▼")) button {
+            background: white !important;
+            color: #374151 !important;
+            border: 1px solid #e5e7eb !important;
+            justify-content: flex-start !important;
+    }
+    
+    
     .stSuccess {
         background: #dcfce7;
         border: 1px solid #bbf7d0;
