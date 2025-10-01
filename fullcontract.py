@@ -79,64 +79,7 @@ def format_indian_currency(num):
 
     return result
 
-def format_indian_number(num):
-    if pd.isna(num) or num == 0:
-        return "0"
 
-    is_negative = num < 0
-    num = abs(num)
-    s = str(int(num))
-
-    if len(s) <= 3:
-        formatted = s
-    else:
-        # Last 3 digits
-        last_three = s[-3:]
-        other_digits = s[:-3]
-
-        # Add commas every 2 digits for the remaining part
-        formatted_other = ""
-        for i in range(len(other_digits) - 1, -1, -1):
-            if (len(other_digits) - i) % 2 == 1 and len(other_digits) - i > 1:
-                formatted_other = "," + formatted_other
-            formatted_other = other_digits[i] + formatted_other
-
-        formatted = formatted_other + "," + last_three
-    if is_negative:
-        formatted = "-" + formatted
-
-
-    return formatted
-
-def amount_in_lakhs_crores(amount):
-    if pd.isna(amount) or amount == 0:
-        return ""
-
-    abs_amount = abs(amount)
-    if abs_amount >= 10000000:  # 1 crore
-        val = amount / 10000000
-        return f"{val:.2f} Crores"
-    elif abs_amount >= 100000:  # 1 lakh
-        val = amount / 100000
-        return f"{val:.2f} Lakhs"
-    else:
-        return ""
-
-def format_date_indian(date_obj):
-    if pd.isna(date_obj):
-        return ""
-    if isinstance(date_obj, str):
-        try:
-            date_obj = pd.to_datetime(date_obj)
-        except:
-            return date_obj
-    return date_obj.strftime("%d/%m/%Y")
-
-# PERCENTAGE-BASED CALCULATION FUNCTIONS
-def format_percentage(percentage):
-    if pd.isna(percentage):
-        return "0.00%"
-    return f"{percentage:.2f}%"
 
 getcontext().prec = 50
 
@@ -655,6 +598,30 @@ st.markdown("""
         border-left: 4px solid #ef4444;
     }
     
+    @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+    /* Expander arrows */
+    .stExpander > details > summary::marker {
+            content: "▶ " !important;
+            font-size: 14px;
+    }
+    .stExpander > details[open] > summary::marker {
+            content: "▼ " !important;
+            font-size: 14px;
+    }
+    .stExpander summary span[data-testid="stMarkdownContainer"] {
+            display: flex;
+            align-items: center;
+    }
+    .stExpander summary::before {
+            content: "▶" !important;
+            margin-right: 8px;
+            font-size: 12px;
+            color: #666;
+    }
+    .stExpander[data-expanded="true"] summary::before {
+            content: "▼" !important;
+    }
+            
     /* Section headers */
     h1, h2, h3 {
         color: #1e3a8a;
@@ -5826,7 +5793,7 @@ with tabs[7]:  # About tab
     # FAQ Section
     st.markdown("#### **Frequently Asked Questions (FAQs)**")
     
-    with st.expander("📋 How do I create a new work order?"):
+    with st.expander("📋 How do I create a new work order?", expanded=False):
         st.markdown("""
         1. Navigate to the **Work Order** tab
         2. Fill in all required contract details (Contract Number, Vendor, Location, etc.)
@@ -5835,7 +5802,7 @@ with tabs[7]:  # About tab
         5. Click **Create Work Order** to save
         """)
     
-    with st.expander("💰 How are invoice milestones calculated?"):
+    with st.expander("💰 How are invoice milestones calculated?", expanded=False):
         st.markdown("""
         Invoice milestones are automatically calculated based on:
         - **Category type** (Hardware, AMC, Software, etc.)
@@ -5844,7 +5811,7 @@ with tabs[7]:  # About tab
         - **GST calculations** applied automatically
         """)
     
-    with st.expander("🔍 Why am I getting duplicate detection warnings?"):
+    with st.expander("🔍 Why am I getting duplicate detection warnings?", expanded=False):
         st.markdown("""
         The system prevents duplicates by checking:
         - **Contract Number + Sub-Contract Number combination**
@@ -5852,7 +5819,7 @@ with tabs[7]:  # About tab
         - Use different values or check existing entries in the dashboard
         """)
     
-    with st.expander("📊 How do I export reports?"):
+    with st.expander("📊 How do I export reports?", expanded=False):
         st.markdown("""
         Reports can be exported from:
         - **Dashboard tab** - Overall analytics and summaries
@@ -5861,7 +5828,7 @@ with tabs[7]:  # About tab
         - Data is available in **Excel and CSV formats**
         """)
     
-    with st.expander("⚠️ What do the status indicators mean?"):
+    with st.expander("⚠️ What do the status indicators mean?", expanded=False):
         st.markdown("""
         - **🟢 Green**: Available/Valid entries
         - **🔴 Red**: Duplicates or validation errors
@@ -5954,10 +5921,12 @@ with tabs[7]:  # About tab
     
     with uf2: # Feedback Section
         st.markdown("##### 📝 **User Feedback**")
-        feedback_type = st.selectbox("Feedback Type", ["General Feedback", "Bug Report", "Feature Request", "Technical Issue"])
-        feedback_text = st.text_area("Your Feedback", placeholder="Your feedback will helps us fix bugs and issues, add new features, improve user experience and enhance overall performance.")
+        feedback_type = st.selectbox("Feedback Type", ["General Feedback", "Bug Report", "Feature Request", "Technical Issue"], key="about_feedback_type")
+        feedback_text = st.text_area("Your Feedback", 
+                                     placeholder="Your feedback will helps us fix bugs and issues, add new features, improve user experience and enhance overall performance.",
+                                     key="about_feedback_text")
         
-        if st.button("Submit Feedback", type="primary"):
+        if st.button("Submit Feedback", type="primary", key="about_submit_feedback"): 
             if feedback_text.strip():
                 st.success("Thank you for your feedback! We'll review it and get back to you.")
                 # In a real implementation, this would save to a database or send an email
