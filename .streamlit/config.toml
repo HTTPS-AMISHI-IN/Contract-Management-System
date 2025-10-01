@@ -7,3 +7,10 @@ hideTopBar = true
 
 [runner]
 fastReruns = true
+
+[server]
+maxUploadSize = 50  # 50MB per file
+maxMessageSize = 50
+
+[global]
+suppressDeprecationWarnings = true
