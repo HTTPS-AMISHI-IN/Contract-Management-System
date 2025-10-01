@@ -618,6 +618,27 @@ st.markdown("""
         border-color: #3b82f6;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
+            
+
+    .streamlit-expanderHeader {
+        font-family: 'Material Icons', sans-serif !important;
+    }
+
+/* Ensure Material Icons font is loaded */
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+
+/* Override keyboard_arrow text with proper icon */
+.streamlit-expanderHeader::before {
+    font-family: 'Material Icons';
+    content: "keyboard_arrow_right";
+    font-size: 24px;
+}
+
+/* Hide the text version */
+.streamlit-expanderHeader span {
+    display: none;
+}
+
     
     /* Button styling */
     .stButton > button {
