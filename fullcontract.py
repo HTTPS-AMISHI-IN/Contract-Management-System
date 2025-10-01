@@ -55,7 +55,6 @@ def secure_file_validator(uploaded_file):
     return True, "Valid file"
 
 def secure_file_uploader(label, key):
-    """Secure file uploader with validation"""
     uploaded_file = st.file_uploader(
         label, 
         type=['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'],
@@ -636,21 +635,6 @@ st.markdown("""
         background: #e80831;
         transform: translateY(-1px);
     }
-    
-    /* Specific styling for FAQ buttons if you want to target them specifically */
-    [data-testid="stButton"]:has(button:contains("▶")),
-    [data-testid="stButton"]:has(button:contains("▼")) {
-            margin-bottom: 0.5rem;
-    }
-
-    [data-testid="stButton"]:has(button:contains("▶")) button,
-    [data-testid="stButton"]:has(button:contains("▼")) button {
-            background: white !important;
-            color: #374151 !important;
-            border: 1px solid #e5e7eb !important;
-            justify-content: flex-start !important;
-    }
-    
     
     .stSuccess {
         background: #dcfce7;
@@ -5836,93 +5820,65 @@ with tabs[7]:  # About tab
     # FAQ Section
     st.markdown("#### **Frequently Asked Questions (FAQs)**")
     
-    faq_items = [
-        {
-            "question": "How do I create a new work order?",
-            "answer": """
-            **Step-by-step guide:**
-            1. Navigate to the **New Work Order** tab
-            2. Fill in all required contract details
-            3. Add items with categories and values
-            4. Upload proof documents
-            5. Click **Create Work Order** to save
-            """
-        },
-        {
-            "question": "How are invoice milestones calculated?",
-            "answer": """
-            **Milestone calculation based on:**
-            - Category type (Hardware, AMC, Software, etc.)
-            - Payment percentages set during creation
-            - Duration and period specifications
-            - GST calculations applied automatically
-            """
-        },
-        {
-            "question": "Why am I getting duplicate detection warnings?",
-            "answer": """
-            **System prevents duplicates by checking:**
-            - Contract Number + Sub-Contract Number combination
-            - Work Order Number + Item Name + Category combination
-            
-            **Solution:** Use different values or check existing entries.
-            """
-        },
-        {
-            "question": "How do I export reports?",
-            "answer": """
-            Reports can be exported from:
-            - **Dashboard tab** - Overall analytics and summaries
-            - **Work Order tab** - Detailed contract information
-            - **Invoice tab** - Payment and milestone reports
-            - Data is available in **Excel and CSV formats**
-            """
-        },
-        {
-            "question": "What do the status indicators mean?",
-            "answer": """
-            - **🟢 Green**: Available/Valid entries
-            - **🔴 Red**: Duplicates or validation errors
-            - **🟡 Yellow**: Warnings or attention required
-            - **✅ Success**: Operations completed successfully
-            """
-        }
-    ]
+    with st.expander("How do I create a new work order?", expanded=False):
+        st.markdown("""
+    **Step-by-step guide:**
+    1. Navigate to the **New Work Order** tab
+    2. Fill in all required contract details (Contract Number, Vendor, Location, etc.)
+    3. Add items with their categories and values
+    4. Upload proof documents
+    5. Click **Create Work Order** to save
     
-    # Render each FAQ
-    for i, faq in enumerate(faq_items):
-        key = f"faq_{i}"
+    **Important:** All mandatory fields must be completed before submission.
+    """)
         
-        if key not in st.session_state:
-            st.session_state[key] = False
+    with st.expander("How are invoice milestones calculated?", expanded=False):
+        st.markdown("""
+    **Milestone calculation based on:**
+    - **Category type** (Hardware, AMC, Software, etc.)
+    - **Payment percentages** set during invoice creation
+    - **Duration and period** specifications
+    - **GST calculations** applied automatically
+    
+    The system automatically generates appropriate milestones based on your contract type.
+    """)
         
-        arrow = "▼" if st.session_state[key] else "▶"
-        
-        # Custom button with arrow
-        if st.button(f"{arrow} {faq['question']}", key=f"{key}_btn", use_container_width=True):
-            st.session_state[key] = not st.session_state[key]
-            st.rerun()
-        
-        # Show content if expanded
-        if st.session_state[key]:
-            st.markdown(f"""
-            <div style="
-                background: #f8fafc; 
-                padding: 1rem; 
-                border-left: 3px solid #3b82f6; 
-                margin: 0.5rem 0 1rem 0;
-                border-radius: 0 6px 6px 0;
-            ">
-                {faq['answer']}
-            </div>
-            """, unsafe_allow_html=True)
+    with st.expander("Why am I getting duplicate detection warnings?", expanded=False):
+        st.markdown("""
+    **The system prevents duplicates by checking:**
+    - **Contract Number + Sub-Contract Number** combination
+    - **Work Order Number + Item Name + Category** combination
+    
+    **Solution:** Use different values or check existing entries in the dashboard.
+    The duplicate detection helps maintain data integrity.
+    """)
+    
+    with st.expander("How do I export reports?", expanded=False):
+        st.markdown("""
+    **Reports can be exported from:**
+    - **Dashboard tab** - Overall analytics and summaries
+    - **Work Order tab** - Detailed contract information
+    - **Invoice tab** - Payment and milestone reports
+    
+    **Formats available:** Excel and CSV formats for easy data analysis.
+    """)
+    
+    with st.expander("What do the status indicators mean?", expanded=False):
+        st.markdown("""
+    **Status Color Guide:**
+    - 🟢 **Green (Available)** - Valid entries, no conflicts detected
+    - 🔴 **Red (Exists)** - Duplicates or validation errors found
+    - 🟡 **Yellow** - Warnings or attention required
+    - ✅ **Success** - Operations completed successfully
+    - ⚠️ **Warning** - Review required before proceeding
+    """)
     
     st.markdown("---")
     
     # Glossary Section
     st.markdown("#### **Glossary of Terms**")
     
-    with st.expander("📖 Contract & Work Order Terms"):
+    with st.expander(f"📖 Contract & Work Order Terms", expanded=False):
         st.markdown("""
         **Contract Number**: Unique identifier for the main contract  
         **Sub-Contract Number**: Division or sub-section of main contract  
@@ -5933,7 +5889,7 @@ with tabs[7]:  # About tab
         **LD**: Liquidity Damage for delays  
         """)
     
-    with st.expander("📖 Category-Specific Terms"):
+    with st.expander(f"📖 Category-Specific Terms", expanded=False):
         st.markdown(""" 
         **AMC**: Annual Maintenance Contract for services  
         **Hardware AMC**: Combined hardware with maintenance  
@@ -5943,7 +5899,7 @@ with tabs[7]:  # About tab
         **Release Order**: Authorization for payment release  
         """)
     
-    with st.expander("📖 Payment & Milestone Terms"):
+    with st.expander(f"📖 Payment & Milestone Terms", expanded=False):
         st.markdown("""
         **Milestone**: Payment checkpoint in project lifecycle  
         **Delivery**: Equipment/service delivery milestone  
