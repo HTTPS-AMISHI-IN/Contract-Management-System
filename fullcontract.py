@@ -11,8 +11,6 @@ import dateutil.parser as du_parser
 from dateutil.relativedelta import relativedelta
 from decimal import Decimal, getcontext
 from math import ceil
-import magic
-from pathlib import Path
 
 
 # Page configuration
@@ -23,42 +21,36 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-
 def secure_file_validator(uploaded_file):
-    """Single best method for file validation"""
+    """Simplified file validation without magic dependency"""
     if not uploaded_file:
         return False, "No file provided"
     
-    # 1. Size limit check (first - most efficient)
+    # 1. Size limit check
     MAX_SIZE = 50 * 1024 * 1024  # 50MB
     if uploaded_file.size > MAX_SIZE:
         return False, f"File too large. Maximum size: {MAX_SIZE/1024/1024:.0f}MB"
     
-    # 2. Read file content
-    file_content = uploaded_file.read()
+    # 2. File extension validation
+    from pathlib import Path
+    file_ext = Path(uploaded_file.name).suffix.lower()
+    
+    ALLOWED_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx']
+    
+    if file_ext not in ALLOWED_EXTENSIONS:
+        return False, f"File type '{file_ext}' not allowed"
+    
+    # 3. Basic file header validation (without magic)
+    file_content = uploaded_file.read(1024)  # Read first 1KB
     uploaded_file.seek(0)  # Reset file pointer
     
-    # 3. Validate actual MIME type (prevents extension spoofing)
-    try:
-        actual_mime = magic.from_buffer(file_content, mime=True)
-    except:
-        return False, "Cannot determine file type"
-    
-    # 4. Allowed file types with MIME validation
-    ALLOWED_TYPES = {
-        'application/pdf': ['.pdf'],
-        'image/jpeg': ['.jpg', '.jpeg'],
-        'image/png': ['.png'],
-        'application/msword': ['.doc'],
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']
-    }
-    
-    if actual_mime not in ALLOWED_TYPES:
-        return False, f"File type '{actual_mime}' not allowed"
-
-    file_ext = Path(uploaded_file.name).suffix.lower()
-    if file_ext not in ALLOWED_TYPES[actual_mime]:
-        return False, f"Extension '{file_ext}' doesn't match file content"
+    # Simple header checks
+    if file_ext == '.pdf' and not file_content.startswith(b'%PDF'):
+        return False, "Invalid PDF file"
+    elif file_ext in ['.jpg', '.jpeg'] and not file_content.startswith(b'\xff\xd8\xff'):
+        return False, "Invalid JPEG file"
+    elif file_ext == '.png' and not file_content.startswith(b'\x89PNG'):
+        return False, "Invalid PNG file"
     
     return True, "Valid file"
 
@@ -82,6 +74,7 @@ def secure_file_uploader(label, key):
             return None
     
     return None
+
 
 # Conversion of image to base64
 def get_base64_of_bin_file(bin_file):
